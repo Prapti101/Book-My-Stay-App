@@ -1,5 +1,11 @@
 import java.util.*;
 
+class InvalidBookingException extends Exception {
+    public InvalidBookingException(String message) {
+        super(message);
+    }
+}
+
 class Reservation {
     String reservationId;
     String guestName;
@@ -16,29 +22,19 @@ class Reservation {
     }
 }
 
-class BookingHistory {
-    private List<Reservation> history = new ArrayList<>();
+class BookingValidator {
 
-    public void addReservation(Reservation reservation) {
-        history.add(reservation);
-    }
+    private static final List<String> validRoomTypes = Arrays.asList("Standard", "Deluxe", "Suite");
 
-    public List<Reservation> getHistory() {
-        return history;
-    }
-}
+    public static void validateReservation(Reservation reservation) throws InvalidBookingException {
 
-class BookingReportService {
-
-    public void displayAllBookings(List<Reservation> reservations) {
-        System.out.println("Booking History Report:");
-        for (Reservation r : reservations) {
-            System.out.println(r);
+        if (reservation.guestName == null || reservation.guestName.trim().isEmpty()) {
+            throw new InvalidBookingException("Guest name cannot be empty.");
         }
-    }
 
-    public void displaySummary(List<Reservation> reservations) {
-        System.out.println("\nTotal Confirmed Bookings: " + reservations.size());
+        if (!validRoomTypes.contains(reservation.roomType)) {
+            throw new InvalidBookingException("Invalid room type selected: " + reservation.roomType);
+        }
     }
 }
 
@@ -46,20 +42,24 @@ public class BookMyStayApp {
 
     public static void main(String[] args) {
 
-        BookingHistory history = new BookingHistory();
-        BookingReportService reportService = new BookingReportService();
+        List<Reservation> reservations = new ArrayList<>();
 
-        Reservation r1 = new Reservation("RES201", "Amit", "Deluxe");
-        Reservation r2 = new Reservation("RES202", "Priya", "Suite");
-        Reservation r3 = new Reservation("RES203", "Rahul", "Standard");
+        Reservation r1 = new Reservation("RES301", "Amit", "Deluxe");
+        Reservation r2 = new Reservation("RES302", "Priya", "Luxury");
+        Reservation r3 = new Reservation("RES303", "", "Suite");
 
-        history.addReservation(r1);
-        history.addReservation(r2);
-        history.addReservation(r3);
+        List<Reservation> inputs = Arrays.asList(r1, r2, r3);
 
-        List<Reservation> reservations = history.getHistory();
+        for (Reservation r : inputs) {
+            try {
+                BookingValidator.validateReservation(r);
+                reservations.add(r);
+                System.out.println("Booking successful: " + r);
+            } catch (InvalidBookingException e) {
+                System.out.println("Booking failed: " + e.getMessage());
+            }
+        }
 
-        reportService.displayAllBookings(reservations);
-        reportService.displaySummary(reservations);
+        System.out.println("\nValid Reservations Stored: " + reservations.size());
     }
 }
